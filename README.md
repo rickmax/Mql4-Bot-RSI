@@ -14,7 +14,7 @@ Se o indicador iRsi estiver abaixo de 30, envia uma ordem de compra.
 
 
 
- if (iRSI(NULL, PERIOD_M5,20,PRICE_CLOSE,0) < 30)
+    if (iRSI(NULL, PERIOD_M5,20,PRICE_CLOSE,0) < 30)
 
 
 
@@ -27,7 +27,7 @@ Se o indicador iRsi estiver acima de 70, envia uma ordem de compra.
 
 
 
- if (iRSI(NULL, PERIOD_M5,20,PRICE_CLOSE,0) > 70)
+    if (iRSI(NULL, PERIOD_M5,20,PRICE_CLOSE,0) > 70)
 
 
 
