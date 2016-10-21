@@ -1,7 +1,5 @@
 # Mql4-Bot-RSI
 
-#property copyright "Copyright © 2014, by Henrque Max"
-#property link      "http://www.henriquemax.com.br/"
 
 Simples Forex BoT - Expert Advisor, este bot é open source, com o intúito de aumentar a comunidade de desenvolvedores MQL4.
 
@@ -43,3 +41,6 @@ Se o indicador iRsi estiver acima de 70, envia uma ordem de compra.
 # Cuidado!
 
 Os códigos acima são para estudo, a utilização no mercado é de inteira responsabilidade do usuário com risco de perda de capital. 
+
+property copyright "Copyright © 2014, by Henrque Max"
+property link      "http://www.henriquemax.com.br/"
