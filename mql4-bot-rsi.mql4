@@ -1,0 +1,451 @@
+//-------------------------------------------------------------
+//  Etasoft Inc. Forex EA and Script Generator version 5.0   EA
+//-------------------------------------------------------------
+// Keywords: MT4, Forex EA builder, create EA, expert advisor developer
+
+#property copyright "Copyright © 2014, by Henrque Max"
+#property link      "http://www.hdsistemax.com.br/"
+
+#include <stdlib.mqh>
+#include <WinUser32.mqh>
+
+// exported variables
+extern int TrailingStop9 = 12;
+extern int NewTakeProfit9 = 30;
+extern int TrailingGap9 = 7;
+extern int OpenOrdersLimit14 = 2;
+extern double BuyLots13 = 0.01;
+extern int BuyStoploss13 = 200;
+extern int BuyTakeprofit13 = 300;
+extern string BuyExpertName13 = "Ganso";
+extern double BuyLots25 = 0.01;
+extern int BuyStoploss25 = 200;
+extern int BuyTakeprofit25 = 300;
+extern double MaxBuyLots25 = 0.1;
+extern double LotsBuyMpOnLoss25 = 2;
+extern int OpenOrdersLimit19 = 2;
+extern double SellLots22 = 0.01;
+extern int SellStoploss22 = 200;
+extern int SellTakeprofit22 = 300;
+extern string SellExpertName22 = "My Expert";
+extern double SellLots26 = 0.01;
+extern int SellStoploss26 = 200;
+extern int SellTakeprofit26 = 300;
+extern double MaxSellLots26 = 0.1;
+extern double LotsSellMpOnLoss26 = 2;
+extern double Amount17 = 0;
+extern double Amount20 = 0;
+
+
+// local variables
+double PipValue=1;    // this variable is here to support 5-digit brokers
+bool Terminated = false;
+string LF = "\n";  // use this in custom or utility blocks where you need line feeds
+int NDigits = 4;   // used mostly for NormalizeDouble in Flex type blocks
+int ObjCount = 0;  // count of all objects created on the chart, allows creation of objects with unique names
+int current = 0;
+
+double CurrentBuyLots25 = 1;
+bool FirstBuyLotsMgm25 = true;
+double CurrentSellLots26 = 1;
+bool FirstSellLotsMgm26 = true;
+
+
+int init()
+{
+    NDigits = Digits;
+    
+    if (false) ObjectsDeleteAll();      // clear the chart
+    
+    CurrentBuyLots25 = BuyLots25;
+    
+    CurrentSellLots26 = SellLots26;
+    
+    
+    Comment("");    // clear the chart
+}
+
+// Expert start
+int start()
+{
+    if (Bars < 10)
+    {
+        Comment("Not enough bars");
+        return (0);
+    }
+    if (Terminated == true)
+    {
+        Comment("EA Terminated.");
+        return (0);
+    }
+    
+    OnEveryTick12();
+    
+}
+
+void OnEveryTick12()
+{
+    PipValue = 1;
+    if (NDigits == 3 || NDigits == 5) PipValue = 10;
+    
+    TrailingStop9();
+    
+}
+
+void TrailingStop9()
+{
+    for (int i=OrdersTotal()-1; i >= 0; i--)
+    if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+    {
+        if (OrderSymbol() == Symbol() && OrderMagicNumber() == 1)
+        {
+            double takeprofit = OrderTakeProfit();
+            
+            if (OrderType() == OP_BUY && Ask - OrderOpenPrice() > TrailingStop9*PipValue*Point)
+            {
+                if (OrderStopLoss() < Ask-(TrailingStop9+TrailingGap9)*PipValue*Point)
+                {
+                    if (NewTakeProfit9 != 0) takeprofit = Ask+(NewTakeProfit9 + TrailingStop9)*PipValue*Point;
+                    bool ret1 = OrderModify(OrderTicket(), OrderOpenPrice(), Ask-TrailingStop9*PipValue*Point, takeprofit, OrderExpiration(), White);
+                    if (ret1 == false)
+                    Print("OrderModify() error - ", ErrorDescription(GetLastError()));
+                }
+            }
+            if (OrderType() == OP_SELL && OrderOpenPrice() - Bid > TrailingStop9*PipValue*Point)
+            {
+                if (OrderStopLoss() > Bid+(TrailingStop9+TrailingGap9)*PipValue*Point)
+                {
+                    if (NewTakeProfit9 != 0) takeprofit = Bid-(NewTakeProfit9 + TrailingStop9)*PipValue*Point;
+                    bool ret2 = OrderModify(OrderTicket(), OrderOpenPrice(), Bid+TrailingStop9*PipValue*Point, takeprofit, OrderExpiration(), White);
+                    if (ret2 == false)
+                    Print("OrderModify() error - ", ErrorDescription(GetLastError()));
+                }
+            }
+        }
+    }
+    else
+    Print("OrderSelect() error - ", ErrorDescription(GetLastError()));
+    TechnicalAnalysis10();
+    TechnicalAnalysis24();
+    CheckOpenOrders17();
+    CheckOpenOrders20();
+    
+}
+
+void TechnicalAnalysis10()
+{
+    if (iRSI(NULL, PERIOD_M5,20,PRICE_CLOSE,0) < 30)
+    {
+        LimitOpenOrders14();
+        
+    }
+}
+
+void LimitOpenOrders14()
+{
+    int count = 0;
+    for (int i=OrdersTotal()-1; i >= 0; i--)
+    if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+    {
+        if (OrderSymbol() == Symbol())
+        if (OrderMagicNumber() == 1)
+        {
+            count++;
+        }
+    }
+    else
+    {
+        Print("OrderSend() error - ", ErrorDescription(GetLastError()));
+    }
+    if (count < OpenOrdersLimit14)
+    {
+        BuyOrder13();
+        BuyOrderLotsMgm25();
+        
+    }
+}
+
+void BuyOrder13()
+{
+    double SL = Ask - BuyStoploss13*PipValue*Point;
+    if (BuyStoploss13 == 0) SL = 0;
+    double TP = Ask + BuyTakeprofit13*PipValue*Point;
+    if (BuyTakeprofit13 == 0) TP = 0;
+    int ticket = -1;
+    if (true)
+    ticket = OrderSend(Symbol(), OP_BUY, BuyLots13, Ask, 4, 0, 0, BuyExpertName13, 1, 0, Blue);
+    else
+    ticket = OrderSend(Symbol(), OP_BUY, BuyLots13, Ask, 4, SL, TP, BuyExpertName13, 1, 0, Blue);
+    if (ticket > -1)
+    {
+        if (true)
+        {
+            OrderSelect(ticket, SELECT_BY_TICKET);
+            bool ret = OrderModify(OrderTicket(), OrderOpenPrice(), SL, TP, 0, Blue);
+            if (ret == false)
+            Print("OrderModify() error - ", ErrorDescription(GetLastError()));
+        }
+            
+    }
+    else
+    {
+        Print("OrderSend() error - ", ErrorDescription(GetLastError()));
+    }
+}
+
+void BuyOrderLotsMgm25()
+{
+    double profit = 0;
+    datetime lastCloseTime = 0;
+    int cnt = OrdersHistoryTotal();
+    for (int i=0; i < cnt; i++)
+    {
+        if (!OrderSelect(i, SELECT_BY_POS, MODE_HISTORY)) continue;
+        if (OrderSymbol() == Symbol() && OrderMagicNumber() == 1 && lastCloseTime < OrderCloseTime())
+        {
+            lastCloseTime = OrderCloseTime();
+            profit = OrderProfit();
+            CurrentBuyLots25 = OrderLots();     // take lots from the last order
+        }
+    }
+    
+    if (profit > 0)     // had profit
+    {
+        CurrentBuyLots25 = CurrentBuyLots25 * 1 + 0;
+        if (false)
+        CurrentBuyLots25 = BuyLots25;
+    }
+    else if (profit < 0)    // had loss
+    {
+        CurrentBuyLots25 = CurrentBuyLots25 * LotsBuyMpOnLoss25 + 0;
+        if (false) CurrentBuyLots25 = BuyLots25;
+    }
+    if (CurrentBuyLots25 > MaxBuyLots25)
+    {
+        CurrentBuyLots25 = MaxBuyLots25;
+    }
+    double lotvalue = CurrentBuyLots25;
+    
+    if (lotvalue < MarketInfo(Symbol(), MODE_MINLOT))    // make sure lot is not smaller than allowed value
+    {
+        lotvalue = MarketInfo(Symbol(), MODE_MINLOT);
+    }
+    if (lotvalue > MarketInfo(Symbol(), MODE_MAXLOT))    // make sure lot is not greater than allowed value
+    {
+        lotvalue = MarketInfo(Symbol(), MODE_MAXLOT);
+    }
+    double SL = Ask - BuyStoploss25*PipValue*Point;
+    if (BuyStoploss25 == 0) SL = 0;
+    double TP = Ask + BuyTakeprofit25*PipValue*Point;
+    if (BuyTakeprofit25 == 0) TP = 0;
+    FirstBuyLotsMgm25 = false;
+    int ticket = -1;
+    if (true)
+    ticket = OrderSend(Symbol(), OP_BUY, lotvalue, Ask, 4, 0, 0, "My Expert", 1, 0, Blue);
+    else
+    ticket = OrderSend(Symbol(), OP_BUY, lotvalue, Ask, 4, SL, TP, "My Expert", 1, 0, Blue);
+    if (ticket > -1)
+    {
+        if (true)
+        {
+            OrderSelect(ticket, SELECT_BY_TICKET);
+            bool ret = OrderModify(OrderTicket(), OrderOpenPrice(), SL, TP, 0, Blue);
+            if (ret == false)
+            Print("OrderModify() error - ", ErrorDescription(GetLastError()));
+        }
+            
+    }
+    else
+    {
+        Print("OrderSend() error - ", ErrorDescription(GetLastError()));
+    }
+}
+
+void TechnicalAnalysis24()
+{
+    if (iRSI(NULL, PERIOD_M5,20,PRICE_CLOSE,0) > 70)
+    {
+        LimitOpenOrders19();
+        
+    }
+}
+
+void LimitOpenOrders19()
+{
+    int count = 0;
+    for (int i=OrdersTotal()-1; i >= 0; i--)
+    if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+    {
+        if (OrderSymbol() == Symbol())
+        if (OrderMagicNumber() == 1)
+        {
+            count++;
+        }
+    }
+    else
+    {
+        Print("OrderSend() error - ", ErrorDescription(GetLastError()));
+    }
+    if (count < OpenOrdersLimit19)
+    {
+        SellOrder22();
+        SellOrderLotsMgm26();
+        
+    }
+}
+
+void SellOrder22()
+{
+    double SL = Bid + SellStoploss22*PipValue*Point;
+    if (SellStoploss22 == 0) SL = 0;
+    double TP = Bid - SellTakeprofit22*PipValue*Point;
+    if (SellTakeprofit22 == 0) TP = 0;
+    int ticket = -1;
+    if (true)
+    ticket = OrderSend(Symbol(), OP_SELL, SellLots22, Bid, 4, 0, 0, SellExpertName22, 1, 0, Red);
+    else
+    ticket = OrderSend(Symbol(), OP_SELL, SellLots22, Bid, 4, SL, TP, SellExpertName22, 1, 0, Red);
+    if (ticket > -1)
+    {
+        if (true)
+        {
+            OrderSelect(ticket, SELECT_BY_TICKET);
+            bool ret = OrderModify(OrderTicket(), OrderOpenPrice(), SL, TP, 0, Red);
+            if (ret == false)
+            Print("OrderModify() error - ", ErrorDescription(GetLastError()));
+        }
+            
+    }
+    else
+    {
+        Print("OrderSend() error - ", ErrorDescription(GetLastError()));
+    }
+}
+
+void SellOrderLotsMgm26()
+{
+    double profit = 0;
+    datetime lastCloseTime = 0;
+    int cnt = OrdersHistoryTotal();
+    for (int i=0; i < cnt; i++)
+    {
+        if (!OrderSelect(i, SELECT_BY_POS, MODE_HISTORY)) continue;
+        if (OrderSymbol() == Symbol() && OrderMagicNumber() == 1 && lastCloseTime < OrderCloseTime())
+        {
+            lastCloseTime = OrderCloseTime();
+            profit = OrderProfit();
+            CurrentSellLots26 = OrderLots();
+        }
+    }
+    
+    if (profit > 0)     // had profit
+    {
+        CurrentSellLots26 = CurrentSellLots26 * 1 + 0;
+        if (false)
+        CurrentSellLots26 = SellLots26;
+    }
+    else if (profit < 0)    // had loss
+    {
+        CurrentSellLots26 = CurrentSellLots26 * LotsSellMpOnLoss26 + 0;
+        if (false) CurrentSellLots26 = SellLots26;
+    }
+    if (CurrentSellLots26 > MaxSellLots26)
+    {
+        CurrentSellLots26 = MaxSellLots26;
+    }
+    double lotvalue = CurrentSellLots26;
+    
+    if (lotvalue < MarketInfo(Symbol(), MODE_MINLOT))    // make sure lot is not smaller than allowed value
+    {
+        lotvalue = MarketInfo(Symbol(), MODE_MINLOT);
+    }
+    if (lotvalue > MarketInfo(Symbol(), MODE_MAXLOT))    // make sure lot is not greater than allowed value
+    {
+        lotvalue = MarketInfo(Symbol(), MODE_MAXLOT);
+    }
+    
+    double SL = Bid + SellStoploss26*PipValue*Point;
+    if (SellStoploss26 == 0) SL = 0;
+    double TP = Bid - SellTakeprofit26*PipValue*Point;
+    if (SellTakeprofit26 == 0) TP = 0;
+    FirstSellLotsMgm26 = false;
+    int ticket = -1;
+    if (true)
+    ticket = OrderSend(Symbol(), OP_SELL, lotvalue, Bid, 4, 0, 0, "My Expert", 1, 0, Red);
+    else
+    ticket = OrderSend(Symbol(), OP_SELL, lotvalue, Bid, 4, SL, TP, "My Expert", 1, 0, Red);
+    if (ticket > -1)
+    {
+        if (true)
+        {
+            OrderSelect(ticket, SELECT_BY_TICKET);
+            bool ret = OrderModify(OrderTicket(), OrderOpenPrice(), SL, TP, 0, Red);
+            if (ret == false)
+            Print("OrderModify() error - ", ErrorDescription(GetLastError()));
+        }
+            
+    }
+    else
+    {
+        Print("OrderSend() error - ", ErrorDescription(GetLastError()));
+    }
+}
+
+void CheckOpenOrders17()
+{
+    double profit = 0;
+    for (int i=OrdersTotal()-1; i >= 0; i--)
+    {
+        if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+        {
+            if (OrderType() == OP_BUY && OrderSymbol() == Symbol() && OrderMagicNumber() == 1)
+            {
+                profit += OrderProfit();
+            }
+        }
+        else
+        {
+            Print("OrderSelect() error - ", ErrorDescription(GetLastError()));
+        }
+    }
+    
+    if (profit < Amount17)
+    {
+        LimitOpenOrders14();
+        
+    }
+}
+
+void CheckOpenOrders20()
+{
+    double profit = 0;
+    for (int i=OrdersTotal()-1; i >= 0; i--)
+    {
+        if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+        {
+            if (OrderType() == OP_BUY && OrderSymbol() == Symbol() && OrderMagicNumber() == 1)
+            {
+                profit += OrderProfit();
+            }
+        }
+        else
+        {
+            Print("OrderSelect() error - ", ErrorDescription(GetLastError()));
+        }
+    }
+    
+    if (profit < Amount20)
+    {
+        LimitOpenOrders19();
+        
+    }
+}
+
+
+
+int deinit()
+{
+    if (false) ObjectsDeleteAll();
+    
+    
+}
